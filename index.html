@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>奇門 · 天機問卦</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Serif TC', serif;
+      background: #0d0a06;
+      color: #f0e0b0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    #app { position: relative; }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+      position: relative;
+    }
+    .screen.active { display: flex; }
+
+    /* Stars */
+    #stars { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+    .star { position:absolute; border-radius:50%; background:#f0e0b0; animation:twinkle var(--dur) ease-in-out infinite; opacity:0; }
+    @keyframes twinkle { 0%,100%{opacity:0} 50%{opacity:var(--op)} }
+
+    /* Welcome */
+    #welcome { text-align:center; z-index:1; }
+    .bagua-ring { width:160px; height:160px; margin:0 auto 2rem; position:relative; animation:spin-slow 20s linear infinite; }
+    .bagua-ring svg { width:100%; height:100%; }
+    @keyframes spin-slow { to { transform:rotate(360deg); } }
+
+    .title-main {
+      font-size: 3.2rem;
+      font-weight: 900;
+      letter-spacing: 0.4em;
+      color: #f0c040;
+      text-shadow: 0 0 40px rgba(240,192,64,0.5);
+      margin-bottom: 0.3rem;
+    }
+    .title-sub {
+      font-size: 1.05rem;
+      letter-spacing: 0.25em;
+      color: #d4aa60;
+      margin-bottom: 2.5rem;
+    }
+    .quote-box { max-width:290px; margin:0 auto 3rem; }
+    .quote {
+      font-size: 1rem;
+      line-height: 2.2;
+      color: #e0c880;
+      letter-spacing: 0.12em;
+      font-style: italic;
+    }
+    .quote-divider { width:60px; height:1px; background:linear-gradient(to right,transparent,#f0c040,transparent); margin:1.5rem auto; }
+    .tap-prompt {
+      font-size: 0.95rem;
+      letter-spacing: 0.3em;
+      color: #b09040;
+      animation: pulse-text 2s ease-in-out infinite;
+    }
+    @keyframes pulse-text { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+    /* Question */
+    #question { z-index:1; text-align:center; }
+    .q-title { font-size:1.2rem; letter-spacing:0.3em; color:#d4aa60; margin-bottom:0.5rem; }
+    .q-sub { font-size:0.9rem; letter-spacing:0.2em; color:#907840; margin-bottom:2.5rem; }
+    .q-divider { width:80px; height:1px; background:linear-gradient(to right,transparent,#f0c040,transparent); margin:0 auto 2.5rem; }
+    .options-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; width:100%; max-width:320px; }
+    .option-card {
+      background: rgba(240,192,64,0.08);
+      border: 1px solid rgba(240,192,64,0.35);
+      border-radius: 12px;
+      padding: 1.5rem 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+    }
+    .option-card:active { transform:scale(0.95); background:rgba(240,192,64,0.18); border-color:#f0c040; }
+    .option-icon { font-size:1.8rem; margin-bottom:0.5rem; display:block; }
+    .option-text { font-size:0.95rem; letter-spacing:0.15em; color:#e0c880; }
+
+    /* Drawing */
+    #drawing { z-index:1; text-align:center; }
+    .draw-title { font-size:1rem; letter-spacing:0.3em; color:#b09040; margin-bottom:3rem; }
+    .yarrow-container { position:relative; width:120px; height:120px; margin:0 auto 3rem; }
+    .yarrow-circle { position:absolute; top:0; left:0; width:100%; height:100%; border:1px solid rgba(240,192,64,0.4); border-radius:50%; animation:expand-ring 1.5s ease-out infinite; }
+    .yarrow-circle:nth-child(2) { animation-delay:0.5s; }
+    .yarrow-circle:nth-child(3) { animation-delay:1s; }
+    @keyframes expand-ring { 0%{transform:scale(0.3);opacity:1} 100%{transform:scale(1.8);opacity:0} }
+    .yarrow-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:60px; height:60px; border:1px solid #f0c040; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; color:#f0c040; }
+    .draw-lines { font-size:0.95rem; letter-spacing:0.2em; color:#907840; line-height:2.8; }
+    .draw-line-reveal { opacity:0; animation:reveal-line 0.6s ease forwards; }
+    @keyframes reveal-line { to{opacity:1} }
+
+    /* Result */
+    #result { z-index:1; text-align:center; padding-bottom:4rem; }
+    .result-symbol-wrap { margin:2rem auto; position:relative; width:180px; height:180px; animation:float-symbol 3s ease-in-out infinite; }
+    @keyframes float-symbol { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+    .result-glow { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:200px; height:200px; border-radius:50%; background:radial-gradient(circle,rgba(240,192,64,0.2) 0%,transparent 70%); animation:glow-pulse 2s ease-in-out infinite; }
+    @keyframes glow-pulse { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.2)} }
+    .result-symbol-svg { width:100%; height:100%; position:relative; z-index:1; }
+    .result-name { font-size:1.6rem; font-weight:900; letter-spacing:0.3em; color:#f0c040; margin-bottom:0.4rem; }
+    .result-subtitle { font-size:0.9rem; letter-spacing:0.25em; color:#b09040; margin-bottom:2.5rem; }
+    .scroll-hint { font-size:0.85rem; letter-spacing:0.2em; color:#705820; animation:bounce-down 1.5s ease-in-out infinite; margin-bottom:2rem; }
+    @keyframes bounce-down { 0%,100%{transform:translateY(0)} 50%{transform:translateY(5px)} }
+
+    .interpretation { max-width:320px; margin:0 auto; text-align:left; }
+    .interp-section { margin-bottom:1.8rem; opacity:0; transform:translateY(20px); transition:all 0.6s ease; }
+    .interp-section.visible { opacity:1; transform:translateY(0); }
+    .interp-label { font-size:0.8rem; letter-spacing:0.3em; color:#b09040; margin-bottom:0.6rem; border-left:2px solid #f0c040; padding-left:0.7rem; }
+    .interp-text { font-size:0.95rem; line-height:2.1; color:#e0c880; letter-spacing:0.05em; }
+    .interp-divider { width:100%; height:1px; background:linear-gradient(to right,transparent,rgba(240,192,64,0.3),transparent); margin:1.2rem 0; }
+
+    .restart-area { margin-top:3rem; padding:1rem; cursor:pointer; }
+    .restart-text { font-size:0.85rem; letter-spacing:0.3em; color:#907840; }
+    .restart-text:active { color:#f0c040; }
+
+    /* Loading / Error */
+    .loading-text { font-size:0.95rem; letter-spacing:0.3em; color:#b09040; animation:pulse-text 1.5s ease-in-out infinite; }
+    .error-text { font-size:0.9rem; letter-spacing:0.1em; color:#d47a7a; line-height:2.2; max-width:280px; text-align:center; }
+
+    #overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:#0d0a06; z-index:100; pointer-events:none; opacity:0; transition:opacity 0.5s; }
+    #overlay.show { opacity:1; pointer-events:all; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="stars"></div>
+  <div id="overlay"></div>
+
+  <!-- Loading -->
+  <div id="loading-screen" class="screen active">
+    <div class="loading-text">天機載入中...</div>
+  </div>
+
+  <!-- Welcome -->
+  <div id="welcome" class="screen" onclick="goToQuestion()">
+    <div class="bagua-ring">
+      <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(240,192,64,0.25)" stroke-width="1"/>
+        <circle cx="80" cy="80" r="55" fill="none" stroke="rgba(240,192,64,0.15)" stroke-width="0.5"/>
+        <g fill="#f0c040" font-family="serif" font-size="16" text-anchor="middle" dominant-baseline="middle">
+          <text x="80" y="18">☰</text><text x="130" y="34">☱</text>
+          <text x="148" y="80">☲</text><text x="130" y="126">☳</text>
+          <text x="80" y="148">☷</text><text x="30" y="126">☴</text>
+          <text x="12" y="80">☵</text><text x="30" y="34">☶</text>
+        </g>
+        <text x="80" y="84" font-size="22" text-anchor="middle" dominant-baseline="middle" fill="#f0c040" opacity="0.7">☯</text>
+      </svg>
+    </div>
+    <div class="title-main">奇門</div>
+    <div class="title-sub">QIMEN · 天機問卦</div>
+    <div class="quote-divider"></div>
+    <div class="quote-box">
+      <div class="quote">「天地人三才，<br>時空局合一，<br>凡事皆有因，<br>問之可得機。」</div>
+    </div>
+    <div class="quote-divider"></div>
+    <div class="tap-prompt">觸 碰 以 開 啟</div>
+  </div>
+
+  <!-- Question -->
+  <div id="question" class="screen">
+    <div class="q-title">靜心，思汝所問</div>
+    <div class="q-sub">選擇你的問題方向</div>
+    <div class="q-divider"></div>
+    <div class="options-grid">
+      <div class="option-card" onclick="startDrawing('work')"><span class="option-icon">⚔️</span><div class="option-text">工 作</div></div>
+      <div class="option-card" onclick="startDrawing('wealth')"><span class="option-icon">💰</span><div class="option-text">財 運</div></div>
+      <div class="option-card" onclick="startDrawing('love')"><span class="option-icon">🌸</span><div class="option-text">桃 花</div></div>
+      <div class="option-card" onclick="startDrawing('misc')"><span class="option-icon">☁️</span><div class="option-text">尚 無 方 向</div></div>
+    </div>
+  </div>
+
+  <!-- Drawing -->
+  <div id="drawing" class="screen">
+    <div class="draw-title" id="draw-title">起 式 布 局 中</div>
+    <div class="yarrow-container">
+      <div class="yarrow-circle"></div>
+      <div class="yarrow-circle"></div>
+      <div class="yarrow-circle"></div>
+      <div class="yarrow-center">☯</div>
+    </div>
+    <div class="draw-lines" id="draw-lines"></div>
+  </div>
+
+  <!-- Result -->
+  <div id="result" class="screen">
+    <div style="font-size:0.85rem;letter-spacing:0.3em;color:#907840;margin-bottom:1rem" id="result-category"></div>
+    <div class="result-symbol-wrap">
+      <div class="result-glow"></div>
+      <svg class="result-symbol-svg" viewBox="0 0 180 180" id="result-svg"></svg>
+    </div>
+    <div class="result-name" id="result-name"></div>
+    <div class="result-subtitle" id="result-subtitle"></div>
+    <div class="scroll-hint">↓ 下 滑 查 看 解 析 ↓</div>
+    <div class="interpretation" id="interpretation"></div>
+    <div class="restart-area" onclick="restart()"><div class="restart-text">↺ 重 新 問 卦</div></div>
+  </div>
+</div>
+
+<script>
+// ★ 把 Google Sheet CSV 網址貼在這裡 ★
+const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/1-0AHo1E15OQiAPn46Ielz6ZDc2FBYlyLjjqr9m4iVR8/export?format=csv&gid=0';
+
+const categoryNames = { work:'工作問事', wealth:'財運問事', love:'桃花問事', misc:'綜合問事' };
+const adviceKey = { work:'advice_work', wealth:'advice_wealth', love:'advice_love', misc:'advice_misc' };
+
+let SYMBOLS_DATA = [];
+let currentCategory = null;
+
+// Stars
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 80; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const size = Math.random() * 2 + 0.5;
+  s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--op:${0.3+Math.random()*0.6}`;
+  starsEl.appendChild(s);
+}
+
+// CSV parser（支援欄位內含逗號的引號包覆格式）
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  return lines.slice(1).map(line => {
+    const fields = [];
+    let cur = '', inQuote = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQuote = !inQuote; }
+      else if (c === ',' && !inQuote) { fields.push(cur); cur = ''; }
+      else { cur += c; }
+    }
+    fields.push(cur);
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (fields[i] || '').trim().replace(/^"|"$/g, ''); });
+    return obj;
+  }).filter(row => row.symbol && row.symbol.length > 0);
+}
+
+async function loadData() {
+  try {
+    const res = await fetch(SHEET_CSV_URL);
+    if (!res.ok) throw new Error('fetch failed');
+    const text = await res.text();
+    SYMBOLS_DATA = parseCSV(text);
+    if (SYMBOLS_DATA.length === 0) throw new Error('empty');
+    showScreen('welcome');
+  } catch(e) {
+    document.getElementById('loading-screen').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+        <div class="error-text">
+          符號資料載入失敗<br><br>
+          請確認 Google Sheet<br>已發佈為公開 CSV<br><br>
+          <span style="font-size:0.8rem;color:#705820">或 SHEET_CSV_URL 尚未設定</span>
+        </div>
+      </div>`;
+  }
+}
+
+function transition(fn) {
+  const ov = document.getElementById('overlay');
+  ov.classList.add('show');
+  setTimeout(() => { fn(); ov.classList.remove('show'); }, 500);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goToQuestion() { transition(() => showScreen('question')); }
+
+function startDrawing(category) {
+  currentCategory = category;
+  transition(() => { showScreen('drawing'); runDrawingAnimation(); });
+}
+
+function runDrawingAnimation() {
+  const linesEl = document.getElementById('draw-lines');
+  const titleEl = document.getElementById('draw-title');
+  linesEl.innerHTML = '';
+  const steps = ['排布天盤...', '定位地盤...', '推算時干...', '歸藏卦象...'];
+  let idx = 0;
+  function addStep() {
+    if (idx < steps.length) {
+      titleEl.textContent = steps[idx];
+      const line = document.createElement('div');
+      line.className = 'draw-line-reveal';
+      line.style.animationDelay = '0.1s';
+      line.textContent = steps[idx];
+      linesEl.appendChild(line);
+      idx++;
+      setTimeout(addStep, 900);
+    } else { setTimeout(showResult, 600); }
+  }
+  setTimeout(addStep, 400);
+}
+
+function showResult() {
+  const data = SYMBOLS_DATA[Math.floor(Math.random() * SYMBOLS_DATA.length)];
+  const color = data.color || '#f0c040';
+
+  transition(() => {
+    showScreen('result');
+    document.getElementById('result-category').textContent = categoryNames[currentCategory] || '';
+    document.getElementById('result-name').textContent = data.symbol;
+    document.getElementById('result-subtitle').textContent = data.subtitle || '';
+
+    const svg = document.getElementById('result-svg');
+    svg.innerHTML = `
+      <circle cx="90" cy="90" r="75" fill="none" stroke="${color}44" stroke-width="1"/>
+      <circle cx="90" cy="90" r="55" fill="none" stroke="${color}66" stroke-width="0.5"/>
+      <text x="90" y="105" text-anchor="middle" font-family="serif" font-size="72" fill="${color}">${data.symbol[0]}</text>`;
+
+    const advice = data[adviceKey[currentCategory]] || data['advice_misc'] || '';
+    const interpEl = document.getElementById('interpretation');
+    interpEl.innerHTML = '';
+
+    const sections = [
+      { label: '卦象總覽', text: data.overview },
+      { label: '本次建議', text: advice }
+    ];
+
+    sections.forEach(({ label, text }, i) => {
+      if (!text) return;
+      if (i > 0) {
+        const div = document.createElement('div');
+        div.className = 'interp-divider';
+        interpEl.appendChild(div);
+      }
+      const sec = document.createElement('div');
+      sec.className = 'interp-section';
+      sec.innerHTML = `<div class="interp-label">${label}</div><div class="interp-text">${text}</div>`;
+      interpEl.appendChild(sec);
+      setTimeout(() => sec.classList.add('visible'), 300 + i * 200);
+    });
+
+    document.getElementById('result').scrollTop = 0;
+    window.scrollTo(0, 0);
+  });
+}
+
+function restart() {
+  transition(() => {
+    showScreen('question');
+    document.getElementById('result').scrollTop = 0;
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
