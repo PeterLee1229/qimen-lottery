@@ -127,8 +127,26 @@
     .interp-divider { width:100%; height:1px; background:linear-gradient(to right,transparent,rgba(240,192,64,0.3),transparent); margin:1.2rem 0; }
 
     .restart-area { margin-top:3rem; padding:1rem; cursor:pointer; }
-    .restart-text { font-size:0.85rem; letter-spacing:0.3em; color:#907840; }
+    .restart-text { font-size:0.85rem; letter-spacing:0.3em; color:#907840; cursor:pointer; }
     .restart-text:active { color:#f0c040; }
+
+    .cta-section .cta-text {
+      font-size: 0.88rem;
+      line-height: 2.1;
+      color: #c4a96e;
+      letter-spacing: 0.08em;
+      font-style: italic;
+      text-align: center;
+    }
+    .cta-links {
+      margin-top: 3rem;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+    }
+    .link-divider { color: #4a3c1c; font-size: 0.8rem; }
 
     /* Loading / Error */
     .loading-text { font-size:0.95rem; letter-spacing:0.3em; color:#b09040; animation:pulse-text 1.5s ease-in-out infinite; }
@@ -209,7 +227,11 @@
     <div class="result-subtitle" id="result-subtitle"></div>
     <div class="scroll-hint">↓ 下 滑 查 看 解 析 ↓</div>
     <div class="interpretation" id="interpretation"></div>
-    <div class="restart-area" onclick="restart()"><div class="restart-text">↺ 重 新 問 卦</div></div>
+    <div class="cta-links">
+      <span class="restart-text" onclick="restart()">↺ 重新問卦</span>
+      <span class="link-divider">·</span>
+      <span class="restart-text" onclick="contactLine()">加入 LINE</span>
+    </div>
   </div>
 </div>
 
@@ -351,6 +373,17 @@ function showResult() {
       setTimeout(() => sec.classList.add('visible'), 300 + i * 200);
     });
 
+    // 結語引導
+    const ctaDivider = document.createElement('div');
+    ctaDivider.className = 'interp-divider';
+    interpEl.appendChild(ctaDivider);
+
+    const cta = document.createElement('div');
+    cta.className = 'interp-section cta-section';
+    cta.innerHTML = `<div class="cta-text">此卦僅是天機一隅，<br>若欲深入解局，<br>可加入老師為您指引</div>`;
+    interpEl.appendChild(cta);
+    setTimeout(() => cta.classList.add('visible'), 300 + sections.length * 200);
+
     document.getElementById('result').scrollTop = 0;
     window.scrollTo(0, 0);
   });
@@ -361,6 +394,12 @@ function restart() {
     showScreen('question');
     document.getElementById('result').scrollTop = 0;
   });
+}
+
+function contactLine() {
+  // ★ 待 Peter 提供 LINE@ 網址後填入 ★
+  const LINE_URL = 'YOUR_LINE_AT_URL_HERE';
+  window.open(LINE_URL, '_blank');
 }
 
 loadData();
