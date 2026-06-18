@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -154,12 +155,42 @@
 
     #overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:#0d0a06; z-index:100; pointer-events:none; opacity:0; transition:opacity 0.5s; }
     #overlay.show { opacity:1; pointer-events:all; }
+
+    /* Share button */
+    .share-btn-wrap { margin-top: 2.2rem; margin-bottom: 0.2rem; }
+    .share-btn {
+      background: rgba(240,192,64,0.1);
+      border: 1px solid rgba(240,192,64,0.55);
+      border-radius: 10px;
+      padding: 0.75rem 2.5rem;
+      color: #f0e0b0;
+      font-family: 'Noto Serif TC', serif;
+      font-size: 0.95rem;
+      letter-spacing: 0.3em;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+    .share-btn:active, .share-btn:focus { background: rgba(240,192,64,0.2); outline: none; }
+    .share-btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* Share capture (off-screen, rendered by html2canvas) */
+    #share-capture {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      width: 360px;
+      background: #0d0a06;
+      color: #f0e0b0;
+      font-family: 'Noto Serif TC', serif;
+      padding: 2.5rem 1.8rem 2rem;
+    }
   </style>
 </head>
 <body>
 <div id="app">
   <div id="stars"></div>
   <div id="overlay"></div>
+  <div id="share-capture"></div>
 
   <!-- Loading -->
   <div id="loading-screen" class="screen active">
@@ -194,6 +225,7 @@
   <!-- Question -->
   <div id="question" class="screen">
     <div class="q-title">靜心，思汝所問</div>
+    <div class="q-sub">默請心中的守護神</div>
     <div class="q-sub">選擇你的問題方向</div>
     <div class="q-divider"></div>
     <div class="options-grid">
@@ -227,6 +259,9 @@
     <div class="result-subtitle" id="result-subtitle"></div>
     <div class="scroll-hint">↓ 下 滑 查 看 解 析 ↓</div>
     <div class="interpretation" id="interpretation"></div>
+    <div class="share-btn-wrap">
+      <button class="share-btn" id="share-btn" onclick="shareResult()">分 享 結 果</button>
+    </div>
     <div class="cta-links">
       <span class="restart-text" onclick="restart()">↺ 重新問卦</span>
       <span class="link-divider">·</span>
@@ -244,6 +279,8 @@ const adviceKey = { work:'advice_work', wealth:'advice_wealth', love:'advice_lov
 
 let SYMBOLS_DATA = [];
 let currentCategory = null;
+let currentResultData = null;
+const logoUrl = '/assets/logo.png';
 
 // Stars
 const starsEl = document.getElementById('stars');
@@ -351,6 +388,7 @@ function showResult() {
       <text x="90" y="105" text-anchor="middle" font-family="serif" font-size="72" fill="${color}">${data.symbol[0]}</text>`;
 
     const advice = data[adviceKey[currentCategory]] || data['advice_misc'] || '';
+    currentResultData = { symbol: data.symbol, subtitle: data.subtitle || '', overview: data.overview || '', advice, color, category: categoryNames[currentCategory] || '' };
     const interpEl = document.getElementById('interpretation');
     interpEl.innerHTML = '';
 
@@ -400,6 +438,96 @@ function contactLine() {
   // ★ 待 Peter 提供 LINE@ 網址後填入 ★
   const LINE_URL = 'YOUR_LINE_AT_URL_HERE';
   window.open(LINE_URL, '_blank');
+}
+
+async function addLogoToCanvas(canvas) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const ctx = canvas.getContext('2d');
+        const logoW = canvas.width * 0.12;
+        const logoH = logoW * (img.naturalHeight / img.naturalWidth);
+        ctx.drawImage(img, canvas.width - logoW - 24, 24, logoW, logoH);
+      } catch(e) {}
+      resolve();
+    };
+    img.onerror = () => resolve();
+    img.src = logoUrl;
+  });
+}
+
+async function shareResult() {
+  if (!currentResultData) return;
+  const btn = document.getElementById('share-btn');
+  btn.disabled = true;
+  const { symbol, subtitle, overview, advice, color, category } = currentResultData;
+
+  const sectionHtml = (label, text) => text ? `
+    <div style="font-size:0.75rem;letter-spacing:0.3em;color:#b09040;margin-bottom:0.5rem;border-left:2px solid #f0c040;padding-left:0.7rem">${label}</div>
+    <div style="font-size:0.88rem;line-height:2.1;color:#e0c880;letter-spacing:0.05em">${text}</div>
+  ` : '';
+  const dividerHtml = '<div style="width:100%;height:1px;background:linear-gradient(to right,transparent,rgba(240,192,64,0.3),transparent);margin:1.2rem 0"></div>';
+
+  const captureEl = document.getElementById('share-capture');
+  captureEl.innerHTML = `
+    <div style="text-align:center;">
+      <div style="font-size:0.75rem;letter-spacing:0.3em;color:#b09040;margin-bottom:1.2rem">${category}</div>
+      <div style="width:140px;height:140px;margin:0 auto 1.2rem;">
+        <svg viewBox="0 0 180 180" style="width:100%;height:100%;">
+          <circle cx="90" cy="90" r="75" fill="none" stroke="${color}44" stroke-width="1"/>
+          <circle cx="90" cy="90" r="55" fill="none" stroke="${color}66" stroke-width="0.5"/>
+          <text x="90" y="105" text-anchor="middle" font-family="serif" font-size="72" fill="${color}">${symbol[0]}</text>
+        </svg>
+      </div>
+      <div style="font-size:1.4rem;font-weight:900;letter-spacing:0.3em;color:#f0c040;margin-bottom:0.3rem">${symbol}</div>
+      <div style="font-size:0.8rem;letter-spacing:0.2em;color:#b09040;margin-bottom:1.8rem">${subtitle}</div>
+    </div>
+    <div style="text-align:left;">
+      ${sectionHtml('卦象總覽', overview)}
+      ${overview && advice ? dividerHtml : ''}
+      ${sectionHtml('本次建議', advice)}
+    </div>
+    <div style="text-align:center;margin-top:1.8rem;">
+      <div style="font-size:0.7rem;letter-spacing:0.25em;color:#705820">奇門 · 天機問卦</div>
+    </div>
+  `;
+
+  try {
+    const canvas = await html2canvas(captureEl, {
+      backgroundColor: '#0d0a06',
+      scale: 2,
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
+      width: 360,
+      windowWidth: 360
+    });
+
+    await addLogoToCanvas(canvas);
+
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const fileName = `奇門天機問卦_${symbol}.png`;
+    const file = new File([blob], fileName, { type: 'image/png' });
+
+    let canShareFiles = false;
+    try { if (navigator.canShare) canShareFiles = navigator.canShare({ files: [file] }); } catch(e) {}
+
+    if (canShareFiles) {
+      await navigator.share({ files: [file], title: '奇門天機問卦', text: `我抽到了「${symbol}」卦，奇門天機問卦` });
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') console.warn('share failed:', e);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 loadData();
