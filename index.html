@@ -292,6 +292,7 @@ function loadLogoImage(url) {
       resolve(img);
     };
     img.onerror = () => reject(new Error(`Logo failed to load: ${url}`));
+    img.crossOrigin = 'anonymous';
     img.src = url;
   });
 
