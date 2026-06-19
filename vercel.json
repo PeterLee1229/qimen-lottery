@@ -6,6 +6,7 @@
   "routes": [
     { "src": "/logo-main.png", "dest": "/logo-main.png" },
     { "src": "/logo-watermark.png", "dest": "/logo-watermark.png" },
+    { "src": "/logo-watermark-1.png", "dest": "/logo-watermark-1.png" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
