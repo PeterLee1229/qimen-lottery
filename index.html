@@ -46,11 +46,9 @@
     @keyframes spin-slow { to { transform:rotate(360deg); } }
 
     .site-logo {
-      width: 88px;
-      height: 88px;
+      width: 80px;
       margin: 0 auto 1.5rem;
       display: block;
-      object-fit: contain;
       opacity: 0.9;
     }
     
@@ -208,7 +206,7 @@
 
   <!-- Welcome -->
   <div id="welcome" class="screen" onclick="goToQuestion()">
-    <img id="main-logo" src="./logo-main.png" class="site-logo" alt="奇門抽籤 LOGO" decoding="async">
+    <img id="main-logo" src="./logo-main.png" class="site-logo" alt="" decoding="async" onerror="this.style.display='none'">
     <div class="bagua-ring">
       <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
         <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(240,192,64,0.25)" stroke-width="1"/>
@@ -290,11 +288,12 @@ const adviceKey = { work:'advice_work', wealth:'advice_wealth', love:'advice_lov
 let SYMBOLS_DATA = [];
 let currentCategory = null;
 let currentResultData = null;
-const logoUrl = new URL('./LOGO.png', window.location.href).href;
+const mainLogoUrl = new URL('./logo-main.png', window.location.href).href;
+const watermarkLogoUrl = new URL('./logo-watermark.png', window.location.href).href;
 const logoImageCache = new Map();
 
-function loadLogoImage() {
-  if (logoImageCache.has(logoUrl)) return logoImageCache.get(logoUrl);
+function loadLogoImage(url) {
+  if (logoImageCache.has(url)) return logoImageCache.get(url);
 
   const promise = new Promise((resolve, reject) => {
     const img = new Image();
@@ -305,19 +304,19 @@ function loadLogoImage() {
       } catch(e) {}
       resolve(img);
     };
-    img.onerror = () => reject(new Error(`Logo failed to load: ${logoUrl}`));
-    img.src = logoUrl;
+    img.onerror = () => reject(new Error(`Logo failed to load: ${url}`));
+    img.src = url;
   });
 
-  logoImageCache.set(logoUrl, promise);
+  logoImageCache.set(url, promise);
   return promise;
 }
 
 function initMainLogo() {
   const logo = document.getElementById('main-logo');
   if (!logo) return;
-  logo.src = logoUrl;
-  loadLogoImage().catch((error) => {
+  logo.src = mainLogoUrl;
+  loadLogoImage(mainLogoUrl).catch((error) => {
     console.warn(error.message);
     logo.alt = 'LOGO 載入失敗';
   });
@@ -483,7 +482,7 @@ function contactLine() {
 
 async function addLogoToCanvas(canvas) {
   try {
-    const img = await loadLogoImage();
+    const img = await loadLogoImage(watermarkLogoUrl);
     const ctx = canvas.getContext('2d');
     const maxLogoW = canvas.width * 0.18;
     const logoW = Math.min(maxLogoW, 132);
@@ -491,7 +490,17 @@ async function addLogoToCanvas(canvas) {
     const margin = canvas.width * 0.045;
     ctx.drawImage(img, canvas.width - logoW - margin, margin, logoW, logoH);
   } catch(e) {
-    console.warn('logo render failed:', e);
+    try {
+      const ctx = canvas.getContext('2d');
+      const fontSize = Math.max(18, Math.round(canvas.width * 0.032));
+      ctx.save();
+      ctx.font = `${fontSize}px serif`;
+      ctx.fillStyle = 'rgba(176, 144, 64, 0.75)';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('奇門 · 天機問卦', canvas.width - 20, canvas.height - 20);
+      ctx.restore();
+    } catch(e2) {}
   }
 }
 
