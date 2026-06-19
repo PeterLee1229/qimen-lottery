@@ -46,9 +46,11 @@
     @keyframes spin-slow { to { transform:rotate(360deg); } }
 
     .site-logo {
-      width: 80px;
+      width: 88px;
+      height: 88px;
       margin: 0 auto 1.5rem;
       display: block;
+      object-fit: contain;
       opacity: 0.9;
     }
     
@@ -206,7 +208,7 @@
 
   <!-- Welcome -->
   <div id="welcome" class="screen" onclick="goToQuestion()">
-    <img src="logo-main.png" class="site-logo" alt="logo">
+    <img id="main-logo" src="./logo-main.png" class="site-logo" alt="奇門抽籤 LOGO" decoding="async">
     <div class="bagua-ring">
       <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
         <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(240,192,64,0.25)" stroke-width="1"/>
@@ -288,7 +290,38 @@ const adviceKey = { work:'advice_work', wealth:'advice_wealth', love:'advice_lov
 let SYMBOLS_DATA = [];
 let currentCategory = null;
 let currentResultData = null;
-const logoUrl = 'logo-watermark.png';
+const logoUrl = new URL('./LOGO.png', window.location.href).href;
+const logoImageCache = new Map();
+
+function loadLogoImage() {
+  if (logoImageCache.has(logoUrl)) return logoImageCache.get(logoUrl);
+
+  const promise = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = async () => {
+      try {
+        if (img.decode) await img.decode();
+      } catch(e) {}
+      resolve(img);
+    };
+    img.onerror = () => reject(new Error(`Logo failed to load: ${logoUrl}`));
+    img.src = logoUrl;
+  });
+
+  logoImageCache.set(logoUrl, promise);
+  return promise;
+}
+
+function initMainLogo() {
+  const logo = document.getElementById('main-logo');
+  if (!logo) return;
+  logo.src = logoUrl;
+  loadLogoImage().catch((error) => {
+    console.warn(error.message);
+    logo.alt = 'LOGO 載入失敗';
+  });
+}
 
 // Stars
 const starsEl = document.getElementById('stars');
@@ -449,20 +482,17 @@ function contactLine() {
 }
 
 async function addLogoToCanvas(canvas) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => {
-      try {
-        const ctx = canvas.getContext('2d');
-        const logoW = canvas.width * 0.12;
-        const logoH = logoW * (img.naturalHeight / img.naturalWidth);
-        ctx.drawImage(img, canvas.width - logoW - 24, 24, logoW, logoH);
-      } catch(e) {}
-      resolve();
-    };
-    img.onerror = () => resolve();
-    img.src = logoUrl;
-  });
+  try {
+    const img = await loadLogoImage();
+    const ctx = canvas.getContext('2d');
+    const maxLogoW = canvas.width * 0.18;
+    const logoW = Math.min(maxLogoW, 132);
+    const logoH = logoW * (img.naturalHeight / img.naturalWidth);
+    const margin = canvas.width * 0.045;
+    ctx.drawImage(img, canvas.width - logoW - margin, margin, logoW, logoH);
+  } catch(e) {
+    console.warn('logo render failed:', e);
+  }
 }
 
 async function shareResult() {
@@ -538,6 +568,7 @@ async function shareResult() {
   }
 }
 
+initMainLogo();
 loadData();
 </script>
 </body>
