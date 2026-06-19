@@ -276,7 +276,7 @@ let SYMBOLS_DATA = [];
 let currentCategory = null;
 let currentResultData = null;
 const mainLogoUrl = new URL('./logo-main.png', window.location.href).href;
-const watermarkLogoUrl = 'https://qimen-lottery.vercel.app/logo-watermark-1.png?v=' + Date.now();
+const watermarkLogoUrl = 'https://qimen-lottery.vercel.app/logo-watermark.png';
 const logoImageCache = new Map();
 
 function loadLogoImage(url) {
@@ -299,6 +299,7 @@ function loadLogoImage(url) {
 
   const promise = new Promise((resolve, reject) => {
     const img = new Image();
+    img.crossOrigin = 'anonymous';
     img.decoding = 'async';
     img.onload = async () => {
       try {
@@ -307,7 +308,6 @@ function loadLogoImage(url) {
       resolve(img);
     };
     img.onerror = () => reject(new Error(`Logo failed to load: ${url}`));
-    img.crossOrigin = 'anonymous';
     img.src = url;
   });
 
