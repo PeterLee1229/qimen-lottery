@@ -486,11 +486,10 @@ async function addLogoToCanvas(canvas) {
     const logoW = Math.min(maxLogoW, 132);
     const logoH = logoW * (img.naturalHeight / img.naturalWidth);
     const margin = canvas.width * 0.045;
+    ctx.save();
+    if ('filter' in ctx) ctx.filter = 'brightness(10) sepia(1) saturate(3) hue-rotate(5deg)';
     ctx.drawImage(img, canvas.width - logoW - margin, margin, logoW, logoH);
-    
-    // 確認有畫上去
-    const testData = ctx.getImageData(canvas.width - logoW - margin, margin, 10, 10);
-    console.log('pixel after draw:', testData.data.slice(0, 8));
+    ctx.restore();
   } catch(e) {
     console.log('watermark error:', e.message, watermarkLogoUrl);
     try {
@@ -553,10 +552,8 @@ async function shareResult() {
     });
 
     await addLogoToCanvas(canvas);
-    console.log('before toBlob, canvas size:', canvas.width, canvas.height);
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    console.log('blob size:', blob.size);
     const fileName = `奇門天機問卦_${symbol}.png`;
     const file = new File([blob], fileName, { type: 'image/png' });
 
