@@ -532,10 +532,13 @@ async function shareResult() {
       width: 360,
       height: captureEl.scrollHeight
     });
+    console.log('canvas ok', canvas.width, canvas.height);
 
     await addLogoToCanvas(canvas);
+    console.log('logo ok');
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    console.log('blob ok', blob.size);
     const fileName = `奇門天機問卦_${symbol}.png`;
     const file = new File([blob], fileName, { type: 'image/png' });
 
@@ -552,6 +555,7 @@ async function shareResult() {
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
+    console.log('canShareFiles:', canShareFiles);
   } catch(e) {
     if (e.name !== 'AbortError') console.warn('share failed:', e);
   } finally {
