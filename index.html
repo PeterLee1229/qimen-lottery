@@ -487,7 +487,8 @@ async function addLogoToCanvas(canvas) {
     const logoH = logoW * (img.naturalHeight / img.naturalWidth);
     const margin = canvas.width * 0.045;
     ctx.save();
-    if ('filter' in ctx) ctx.filter = 'brightness(10) sepia(1) saturate(3) hue-rotate(5deg)';
+    ctx.globalAlpha = 0.6;
+    ctx.globalCompositeOperation = 'screen';
     ctx.drawImage(img, canvas.width - logoW - margin, margin, logoW, logoH);
     ctx.restore();
   } catch(e) {
