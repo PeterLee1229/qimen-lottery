@@ -280,6 +280,21 @@ const watermarkLogoUrl = 'https://qimen-lottery.vercel.app/logo-watermark.png';
 const logoImageCache = new Map();
 
 function loadLogoImage(url) {
+  // watermark 不走 cache，避免 CORS 問題
+  if (url === watermarkLogoUrl) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.decoding = 'async';
+      img.onload = async () => {
+        try { if (img.decode) await img.decode(); } catch(e) {}
+        resolve(img);
+      };
+      img.onerror = () => reject(new Error(`Logo failed to load: ${url}`));
+      img.src = url;
+    });
+  }
+  
   if (logoImageCache.has(url)) return logoImageCache.get(url);
 
   const promise = new Promise((resolve, reject) => {
