@@ -498,8 +498,8 @@ async function shareResult() {
     <div style="font-size:0.75rem;letter-spacing:0.3em;color:#b09040;margin-bottom:0.5rem;border-left:2px solid #f0c040;padding-left:0.7rem">${label}</div>
     <div style="font-size:0.88rem;line-height:2.1;color:#e0c880;letter-spacing:0.05em">${text}</div>
   ` : '';
-  const dividerHtml = '<div style="width:100%;height:1px;background:linear-gradient(to right,transparent,rgba(240,192,64,0.3),transparent);margin:1.2rem 0"></div>';
-
+  const dividerHtml = '<div style="width:100%;height:0;border-top:1px solid rgba(240,192,64,0.3);margin:1.2rem 0"></div>';
+  
   const captureEl = document.createElement('div');
   captureEl.style.cssText = 'position:fixed;left:-9999px;top:0;width:360px;background:#0d0a06;color:#f0e0b0;font-family:serif;padding:2.5rem 1.8rem 2rem;';
   captureEl.innerHTML = `
