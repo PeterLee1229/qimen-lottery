@@ -481,14 +481,16 @@ function contactLine() {
 async function addLogoToCanvas(canvas) {
   try {
     const img = await loadLogoImage(watermarkLogoUrl);
-    console.log('watermark img size:', img.naturalWidth, img.naturalHeight);
     const ctx = canvas.getContext('2d');
     const maxLogoW = canvas.width * 0.18;
     const logoW = Math.min(maxLogoW, 132);
     const logoH = logoW * (img.naturalHeight / img.naturalWidth);
     const margin = canvas.width * 0.045;
-    console.log('draw at:', canvas.width - logoW - margin, margin, logoW, logoH);
     ctx.drawImage(img, canvas.width - logoW - margin, margin, logoW, logoH);
+    
+    // 確認有畫上去
+    const testData = ctx.getImageData(canvas.width - logoW - margin, margin, 10, 10);
+    console.log('pixel after draw:', testData.data.slice(0, 8));
   } catch(e) {
     console.log('watermark error:', e.message, watermarkLogoUrl);
     try {
