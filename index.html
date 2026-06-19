@@ -540,6 +540,7 @@ async function shareResult() {
   document.body.appendChild(captureEl);
 
   try {
+    console.log('before html2canvas, el:', captureEl.offsetWidth, captureEl.offsetHeight);
     const canvas = await html2canvas(captureEl, {
       backgroundColor: '#0d0a06',
       scale: 2,
@@ -548,6 +549,7 @@ async function shareResult() {
       width: 360,
       height: captureEl.scrollHeight
     });
+    console.log('after html2canvas');
 
     await addLogoToCanvas(canvas);
 
