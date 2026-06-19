@@ -1,9 +1,11 @@
 {
   "version": 2,
   "builds": [
-    { "src": "index.html", "use": "@vercel/static" }
+    { "src": "**/*", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/logo-main.png", "dest": "/logo-main.png" },
+    { "src": "/logo-watermark.png", "dest": "/logo-watermark.png" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
