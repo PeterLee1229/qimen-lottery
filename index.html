@@ -506,11 +506,11 @@ async function shareResult() {
     <div style="text-align:center;">
       <div style="font-size:0.75rem;letter-spacing:0.3em;color:#b09040;margin-bottom:1.2rem">${category}</div>
       <div style="width:140px;height:140px;margin:0 auto 1.2rem;">
-        <svg viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg" style="width:140px;height:140px;display:block;">
-          <circle cx="90" cy="90" r="75" fill="none" stroke="${color}44" stroke-width="1"/>
-          <circle cx="90" cy="90" r="55" fill="none" stroke="${color}66" stroke-width="0.5"/>
-          <text x="90" y="108" text-anchor="middle" font-size="72" fill="${color}">${symbol[0]}</text>
-        </svg>
+        <div style="width:140px;height:140px;margin:0 auto 1.2rem;position:relative;display:flex;align-items:center;justify-content:center;">
+          <div style="position:absolute;width:140px;height:140px;border-radius:50%;border:1px solid ${color}44;"></div>
+          <div style="position:absolute;width:110px;height:110px;border-radius:50%;border:1px solid ${color}66;"></div>
+          <div style="font-size:72px;color:${color};font-family:serif;">${symbol[0]}</div>
+        </div>
       </div>
       <div style="font-size:1.4rem;font-weight:900;letter-spacing:0.3em;color:#f0c040;margin-bottom:0.3rem">${symbol}</div>
       <div style="font-size:0.8rem;letter-spacing:0.2em;color:#b09040;margin-bottom:1.8rem">${subtitle}</div>
