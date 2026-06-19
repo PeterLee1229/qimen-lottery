@@ -553,8 +553,10 @@ async function shareResult() {
     });
 
     await addLogoToCanvas(canvas);
+    console.log('before toBlob, canvas size:', canvas.width, canvas.height);
 
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    console.log('blob size:', blob.size);
     const fileName = `奇門天機問卦_${symbol}.png`;
     const file = new File([blob], fileName, { type: 'image/png' });
 
