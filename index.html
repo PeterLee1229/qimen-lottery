@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -478,99 +477,179 @@ function contactLine() {
   window.open(LINE_URL, '_blank');
 }
 
-async function addLogoToCanvas(canvas) {
-  try {
-    const img = await loadLogoImage(watermarkLogoUrl);
-    const ctx = canvas.getContext('2d');
-    const maxLogoW = canvas.width * 0.18;
-    const logoW = Math.min(maxLogoW, 132);
-    const logoH = logoW * (img.naturalHeight / img.naturalWidth);
-    const margin = canvas.width * 0.045;
-    ctx.drawImage(img, canvas.width - logoW - margin, margin, logoW, logoH);
-    window.open(canvas.toDataURL('image/png'));
-  } catch(e) {
-    console.log('watermark error:', e.message, watermarkLogoUrl);
-    try {
-      const ctx = canvas.getContext('2d');
-      const fontSize = Math.max(18, Math.round(canvas.width * 0.032));
-      ctx.save();
-      ctx.font = `${fontSize}px serif`;
-      ctx.fillStyle = 'rgba(176, 144, 64, 0.75)';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText('奇門 · 天機問卦', canvas.width - 20, canvas.height - 20);
-      ctx.restore();
-    } catch(e2) {}
+async function drawShareCanvas({ symbol, subtitle, color, overview, advice, category }) {
+  const W = 720;
+  const PADDING = 64;
+  const lineHeight = 36;
+
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+
+  function measureWrappedText(ctx, text, maxWidth, fontSize) {
+    ctx.font = `${fontSize}px 'Noto Serif TC', serif`;
+    const chars = text.split('');
+    const lines = [];
+    let line = '';
+    for (const ch of chars) {
+      const test = line + ch;
+      if (ctx.measureText(test).width > maxWidth && line) {
+        lines.push(line);
+        line = ch;
+      } else {
+        line = test;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
   }
+
+  const contentWidth = W - PADDING * 2;
+  const overviewLines = overview ? measureWrappedText(tempCtx, overview, contentWidth, 28) : [];
+  const adviceLines = advice ? measureWrappedText(tempCtx, advice, contentWidth, 28) : [];
+
+  let H = 80 + 24 + 40 + 280 + 40 + 30 + 60;
+  if (overview) { H += 32 + 16 + overviewLines.length * lineHeight + 48; }
+  if (advice) { H += 1 + 48 + 32 + 16 + adviceLines.length * lineHeight + 60; }
+  else { H += 60; }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#0d0a06';
+  ctx.fillRect(0, 0, W, H);
+
+  let y = 80;
+
+  // category
+  ctx.font = "22px 'Noto Serif TC', serif";
+  ctx.fillStyle = '#b09040';
+  ctx.textAlign = 'center';
+  ctx.fillText(category, W / 2, y);
+  y += 64;
+
+  // 符號圓框
+  const cx = W / 2;
+  const cy = y + 130;
+  ctx.strokeStyle = color + '44';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, 130, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = color + '66';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, 96, 0, Math.PI * 2); ctx.stroke();
+
+  // 符號文字
+  ctx.font = "bold 140px 'Noto Serif TC', serif";
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(symbol[0], cx, cy + 8);
+  ctx.textBaseline = 'alphabetic';
+  y += 280;
+
+  // 卦名
+  ctx.font = "bold 44px 'Noto Serif TC', serif";
+  ctx.fillStyle = '#f0c040';
+  ctx.textAlign = 'center';
+  ctx.fillText(symbol, W / 2, y);
+  y += 48;
+
+  // 副標題
+  ctx.font = "24px 'Noto Serif TC', serif";
+  ctx.fillStyle = '#b09040';
+  ctx.fillText(subtitle, W / 2, y);
+  y += 60;
+
+  ctx.textAlign = 'left';
+
+  function drawSection(label, lines) {
+    ctx.fillStyle = '#f0c040';
+    ctx.fillRect(PADDING, y - 22, 3, 28);
+    ctx.font = "22px 'Noto Serif TC', serif";
+    ctx.fillStyle = '#b09040';
+    ctx.fillText(label, PADDING + 14, y);
+    y += 32;
+    ctx.font = "28px 'Noto Serif TC', serif";
+    ctx.fillStyle = '#e0c880';
+    for (const line of lines) { ctx.fillText(line, PADDING, y); y += lineHeight; }
+  }
+
+  if (overview) { drawSection('卦象總覽', overviewLines); y += 48; }
+
+  if (advice) {
+    const grad = ctx.createLinearGradient(PADDING, 0, W - PADDING, 0);
+    grad.addColorStop(0, 'transparent');
+    grad.addColorStop(0.5, 'rgba(240,192,64,0.3)');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(PADDING, y, W - PADDING * 2, 1);
+    y += 48;
+    drawSection('本次建議', adviceLines);
+  }
+
+  // 浮水印 Logo
+  try {
+    const logoImg = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = watermarkLogoUrl;
+    });
+    const logoW = 180;
+    const logoH = logoW * (logoImg.naturalHeight / logoImg.naturalWidth);
+    const margin = 32;
+    ctx.globalAlpha = 0.75;
+    ctx.drawImage(logoImg, W - logoW - margin, H - logoH - margin, logoW, logoH);
+    ctx.globalAlpha = 1;
+  } catch(e) {
+    ctx.font = "20px 'Noto Serif TC', serif";
+    ctx.fillStyle = 'rgba(176,144,64,0.6)';
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('奇門 · 天機問卦', W - 32, H - 32);
+    ctx.textBaseline = 'alphabetic';
+  }
+
+  return canvas;
 }
 
 async function shareResult() {
   if (!currentResultData) return;
   const btn = document.getElementById('share-btn');
   btn.disabled = true;
-  const { symbol, subtitle, overview, advice, color, category } = currentResultData;
-
-  const sectionHtml = (label, text) => text ? `
-    <div style="font-size:0.75rem;letter-spacing:0.3em;color:#b09040;margin-bottom:0.5rem;border-left:2px solid #f0c040;padding-left:0.7rem">${label}</div>
-    <div style="font-size:0.88rem;line-height:2.1;color:#e0c880;letter-spacing:0.05em">${text}</div>
-  ` : '';
-  const dividerHtml = '<div style="width:100%;height:0;border-top:1px solid rgba(240,192,64,0.3);margin:1.2rem 0"></div>';
-  
-  const captureEl = document.createElement('div');
-  captureEl.style.cssText = 'position:fixed;left:0;top:0;width:360px;background:#0d0a06;color:#f0e0b0;font-family:serif;padding:2.5rem 1.8rem 2rem;z-index:99999;';
-  captureEl.innerHTML = `
-    <div style="text-align:center;">
-      <div style="font-size:0.75rem;letter-spacing:0.3em;color:#b09040;margin-bottom:1.2rem">${category}</div>
-      <div style="width:140px;height:140px;margin:0 auto 1.2rem;">
-        <div style="width:140px;height:140px;margin:0 auto 1.2rem;position:relative;display:flex;align-items:center;justify-content:center;">
-          <div style="position:absolute;width:140px;height:140px;border-radius:50%;border:1px solid ${color}44;"></div>
-          <div style="position:absolute;width:110px;height:110px;border-radius:50%;border:1px solid ${color}66;"></div>
-          <div style="font-size:72px;color:${color};font-family:serif;">${symbol[0]}</div>
-        </div>
-      </div>
-      <div style="font-size:1.4rem;font-weight:900;letter-spacing:0.3em;color:#f0c040;margin-bottom:0.3rem">${symbol}</div>
-      <div style="font-size:0.8rem;letter-spacing:0.2em;color:#b09040;margin-bottom:1.8rem">${subtitle}</div>
-    </div>
-    <div style="text-align:left;">
-      ${sectionHtml('卦象總覽', overview)}
-      ${overview && advice ? dividerHtml : ''}
-      ${sectionHtml('本次建議', advice)}
-    </div>
-  `;
-  document.body.appendChild(captureEl);
 
   try {
-    console.log('before html2canvas, el:', captureEl.offsetWidth, captureEl.offsetHeight);
-    const canvas = await html2canvas(captureEl, {
-      backgroundColor: '#0d0a06',
-      scale: 2,
-      logging: false,
-      useCORS: true,
-      width: 360,
-      height: captureEl.scrollHeight
-    });
-    console.log('after html2canvas');
-
-    await addLogoToCanvas(canvas);
-
+    const canvas = await drawShareCanvas(currentResultData);
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    const fileName = `奇門天機問卦_${symbol}.png`;
+    const fileName = `奇門天機問卦_${currentResultData.symbol}.png`;
     const file = new File([blob], fileName, { type: 'image/png' });
 
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    let shared = false;
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: '奇門天機問卦', text: `我抽到了「${currentResultData.symbol}」卦` });
+        shared = true;
+      }
+    } catch(e) {
+      if (e.name !== 'AbortError') console.warn('share failed:', e);
+    }
+
+    if (!shared) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
   } catch(e) {
-    if (e.name !== 'AbortError') console.warn('share failed:', e);
+    console.warn('shareResult error:', e);
   } finally {
-    document.body.removeChild(captureEl);
     btn.disabled = false;
   }
 }
-
 initMainLogo();
 loadData();
 </script>
