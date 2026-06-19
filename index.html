@@ -557,19 +557,12 @@ async function shareResult() {
     const fileName = `奇門天機問卦_${symbol}.png`;
     const file = new File([blob], fileName, { type: 'image/png' });
 
-    let canShareFiles = false;
-    try { if (navigator.canShare) canShareFiles = navigator.canShare({ files: [file] }); } catch(e) {}
-
-    if (canShareFiles) {
-      await navigator.share({ files: [file], title: '奇門天機問卦', text: `我抽到了「${symbol}」卦，奇門天機問卦` });
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   } catch(e) {
     if (e.name !== 'AbortError') console.warn('share failed:', e);
   } finally {
