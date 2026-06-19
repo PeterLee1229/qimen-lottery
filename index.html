@@ -280,7 +280,7 @@ const adviceKey = { work:'advice_work', wealth:'advice_wealth', love:'advice_lov
 let SYMBOLS_DATA = [];
 let currentCategory = null;
 let currentResultData = null;
-const logoUrl = '/assets/logo.png';
+const logoUrl = 'https://drive.google.com/file/d/1dQCkoz2m3-YE4MlEc-SXiwh_9cLY2F7m/view?usp=sharing';
 
 // Stars
 const starsEl = document.getElementById('stars');
@@ -514,7 +514,7 @@ async function shareResult() {
     try { if (navigator.canShare) canShareFiles = navigator.canShare({ files: [file] }); } catch(e) {}
 
     if (canShareFiles) {
-      await navigator.share({ files: [file], title: '奇門天機問卦', text: `我抽到了「${symbol}」卦，奇門天機問卦` });
+      await navigator.share({ files: [file], title: '奇門天機占卜', text: `我抽到了「${symbol}」卦` });
     } else {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
