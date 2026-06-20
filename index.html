@@ -210,7 +210,7 @@
     <div class="title-sub">QIMEN · 天機問卦</div>
     <div class="quote-divider"></div>
     <div class="quote-box">
-      <div class="quote">「天地人三才，<br>時空局合一，<br>凡事皆有因，<br>問之可得機。」</div>
+      <div class="quote">「天地人三才，時空局合一，<br>凡事皆有因，問之可得機。」</div>
     </div>
     <div class="quote-divider"></div>
     <div class="tap-prompt">觸 碰 以 開 啟</div>
@@ -372,6 +372,7 @@ function showResult() {
     showScreen('result');
     document.getElementById('result-category').textContent = categoryNames[currentCategory] || '';
     document.getElementById('result-name').textContent = data.symbol;
+    document.getElementById('result-name').style.color = data.color || '#f0c040';
     document.getElementById('result-subtitle').textContent = data.subtitle || '';
 
     const svg = document.getElementById('result-svg');
@@ -428,7 +429,6 @@ function restart() {
 }
 
 function contactLine() {
-  // ★ 待 Peter 提供 LINE@ 網址後填入 ★
   const LINE_URL = 'https://line.me/R/ti/p/@384amzuj';
   window.open(LINE_URL, '_blank');
 }
